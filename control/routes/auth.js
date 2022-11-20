@@ -5,8 +5,8 @@ var bcrypt = require("bcrypt");
 var jwt = require("jsonwebtoken");
 
 router.post("/register", async (req, res) => {
-    const { name, email, password } = req.body;
-    if (!name || !email || !password) {
+    const { name, email, password, admin } = req.body;
+    if (!name || !email || !password || admin == null) {
         return res.status(400).json({ error: "Missing some fields" });
     }
 
@@ -20,6 +20,7 @@ router.post("/register", async (req, res) => {
         name,
         email,
         password: bcrypt.hashSync(password, 8),
+        admin,
     });
 
     newUser.save();
