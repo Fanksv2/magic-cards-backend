@@ -46,7 +46,16 @@ router.post("/login", async (req, res) => {
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY);
 
-    res.status(200).json({ name: user.name, email: user.email, token });
+    res.status(200).json({ name: user.name, admin: user.admin, token });
+});
+
+router.get("/user", validateToken, async (req, res) => {
+    const user = await User.findOne({ _id: req.userId }).exec();
+
+    res.status(200).json({
+        name: user.name,
+        admin: user.admin,
+    });
 });
 
 function validateToken(req, res, next) {
@@ -55,14 +64,13 @@ function validateToken(req, res, next) {
         return res.status(400).json({ error: "Not authenticated" });
     }
 
-    const isTokenValid = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    if (!isTokenValid) {
-        return res.status(400).json({ error: "Not authenticated" });
-    }
+    jwt.verify(token, process.env.JWT_SECRET_KEY, function (err, decoded) {
+        if (err) return res.status(400).json({ error: "Not authenticated" });
 
-    req.token = token;
-
-    next();
+        req.token = token;
+        req.userId = decoded.id;
+        next();
+    });
 }
 
 module.exports = { auth: router, validateToken };
