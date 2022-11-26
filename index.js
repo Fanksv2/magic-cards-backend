@@ -3,6 +3,7 @@ const app = express();
 const dotenv = require("dotenv");
 const cors = require("cors");
 const router = require("./control/router");
+const path = require("path");
 
 dotenv.config();
 
@@ -16,6 +17,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 app.use("/", router);
+app.use(express.static(path.join(__dirname + "/public")));
 
 const mongoose = require("mongoose");
 const mongoDB = `mongodb+srv://admin:${process.env.DB_PASSWORD}@cluster0.utsottw.mongodb.net/?retryWrites=true&w=majority`;
