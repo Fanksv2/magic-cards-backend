@@ -28,4 +28,6 @@ db.on("error", console.error.bind(console, "MongoDB connection error:"));
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
     console.log(`Port: ${port}`);
+}).on("error", (err) => {
+    console.log(err);
 });
