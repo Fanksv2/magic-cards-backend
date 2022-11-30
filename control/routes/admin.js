@@ -4,36 +4,36 @@ var bcrypt = require("bcrypt");
 var jwt = require("jsonwebtoken");
 const { validateToken } = require("./auth");
 const multer = require("multer");
-const upload = multer({ dest: "uploads/" });
 var path = require("path");
 var fs = require("fs");
 const Card = require("../../models/card");
+const fetch = require("node-fetch");
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 router.post("/", validateToken, upload.single("image"), (req, res) => {
-    const newCard = new Card({
-        name: req.body.name,
-    });
+    fetch(`${process.env.FILESTACK_URL_KEY}`, {
+        method: "POST",
+        headers: { "Content-Type": "image/png" },
+        body: req.file.buffer,
+    })
+        .then((r) => r.json())
+        .then(
+            async (resFile) => {
+                const newCard = new Card({
+                    name: req.body.name,
+                    url: resFile.url,
+                });
 
-    const tempPath = req.file.path;
-    const targetPath = path.join(__dirname, `../../public/${newCard._id}.png`);
+                newCard.save();
 
-    if (path.extname(req.file.originalname).toLowerCase() === ".png") {
-        fs.rename(tempPath, targetPath, (err) => {
-            if (err) return handleError(err, res);
-
-            newCard.save();
-
-            res.status(200).contentType("text/plain").end("File uploaded!");
-        });
-    } else {
-        fs.unlink(tempPath, (err) => {
-            if (err) return handleError(err, res);
-
-            res.status(403)
-                .contentType("text/plain")
-                .end("Only .png files are allowed!");
-        });
-    }
+                return res.status(200).json({ msg: "Created with success" });
+            },
+            (err) => {
+                return res.status(500).json({ msg: "Fail to save image" });
+            }
+        );
 });
 
 module.exports = router;
